@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>KritE — Final (single file)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#061021; --muted:#98a3b0; --text:#eef7ff;
+  --accent1:#2563eb; --accent2:#d946ef;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;color:var(--text);-webkit-font-smoothing:antialiased}
+body{
+  background: linear-gradient(180deg,#061021,#081426);
+  min-height:100vh;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:22px;
+}
+
+/* wallpaper */
+.bg { position:fixed; inset:0; z-index:-3; background-position:center; background-size:cover; transition:filter .28s, opacity .28s; }
+.bg.blur{ filter: blur(6px) saturate(110%); }
+.overlay{ position:fixed; inset:0; background:linear-gradient(180deg, rgba(2,6,23,0.45), rgba(4,10,25,0.6)); z-index:-2; }
+
+.container{ width:100%; max-width:980px; margin-top:18px; }
+.topbar{ display:flex; align-items:center; justify-content:space-between; padding:6px 8px; color:var(--muted); }
+.brand{ display:flex; align-items:center; gap:12px; }
+.logo-wrap{ display:flex; gap:12px; align-items:center; }
+.logo-box{ width:56px; height:56px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--accent1),var(--accent2)); box-shadow:0 6px 26px rgba(25,10,60,0.35); }
+.logo-img{ width:56px; height:56px; border-radius:10px; object-fit:contain; }
+.brand h1{ margin:0; font-size:18px; }
+.tag{ font-size:12px; color:var(--muted) }
+
+.hero{ margin-top:6px; background: rgba(3,8,16,0.35); border-radius:14px; padding:28px; text-align:center; box-shadow: 0 20px 60px rgba(2,6,23,0.55); border:1px solid rgba(255,255,255,0.02);}
+.hero h2{ margin:0; font-size:24px; color:var(--text) }
+.hero p{ margin:8px 0 14px 0; color:var(--muted) }
+
+.searchbar{ display:flex; align-items:center; justify-content:center; gap:10px; margin:0 auto; max-width:760px; }
+.search-input{ width:100%; padding:12px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); color:var(--text); font-size:16px; outline:none; box-shadow: 0 6px 20px rgba(6,10,20,0.6); }
+.btn{ padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:700; color:white; background:linear-gradient(90deg,var(--accent1),var(--accent2)); }
+.tabs{ display:flex; gap:12px; justify-content:center; margin-top:12px; flex-wrap:wrap; }
+.tab{ padding:8px 12px; border-radius:8px; cursor:pointer; color:var(--muted); background:transparent; border:1px solid transparent; font-weight:600; }
+.tab.active{ color:#fff; background: linear-gradient(90deg,var(--accent1),var(--accent2)); box-shadow:0 10px 30px rgba(37,99,235,0.08); }
+
+.results-wrap{ margin-top:18px; display:flex; gap:18px; }
+.results{ flex:1; background: rgba(3,8,16,0.35); border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.02); }
+.side{ width:300px; background: rgba(3,8,16,0.28); border-radius:12px; padding:12px; border:1px solid rgba(255,255,255,0.02); color:var(--muted); font-size:14px; }
+.card{ padding:12px; border-radius:8px; background:rgba(255,255,255,0.02); margin-bottom:12px; }
+.title{ font-weight:700; font-size:16px; color:var(--text) }
+.url{ font-size:13px; color:var(--muted); margin-top:6px }
+.snippet{ margin-top:8px; color:var(--muted); font-size:14px }
+
+/* assistant */
+.assistant-btn{ position:fixed; right:28px; bottom:28px; width:56px; height:56px; border-radius:999px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); display:flex; align-items:center; justify-content:center; color:white; font-weight:800; box-shadow:0 12px 40px rgba(37,99,235,0.12); cursor:pointer; z-index:60; }
+.assistant-panel{ position:fixed; right:24px; bottom:96px; width:380px; max-height:62vh; background:rgba(3,6,12,0.94); border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px; box-shadow:0 40px 90px rgba(2,6,23,0.7); z-index:70; transform:translateY(20px); opacity:0; transition:all .22s; }
+.assistant-panel.open{ transform:translateY(0); opacity:1; }
+.assistant-header{ display:flex; justify-content:space-between; align-items:center; color:var(--text); }
+.assistant-chat{ overflow:auto; padding:8px; background:rgba(255,255,255,0.01); border-radius:8px; color:var(--muted); font-size:14px }
+.assist-row{ display:flex; gap:8px; align-items:center }
+
+/* shortcuts */
+.shortcuts{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; justify-content:flex-start; }
+.shortcut{ padding:8px 10px; background:rgba(255,255,255,0.02); border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.03); color:var(--text); font-weight:600; font-size:13px; }
+
+/* wallpaper controls */
+.wall-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center; margin-top:12px; color:var(--muted) }
+.small{ font-size:13px; color:var(--muted) }
+
+input[type="file"]{ display:none; }
+footer{ text-align:center; margin-top:12px; color:var(--muted); font-size:13px; }
+
+@media(max-width:900px){
+  .container{ padding:0 12px }
+  .results-wrap{ flex-direction:column }
+  .side{ width:100% }
+  .assistant-panel{ right:12px; left:12px; bottom:80px; width:auto; max-height:50vh }
+}
+:focus{ outline:3px solid rgba(37,99,235,0.18); outline-offset:3px; border-radius:8px }
+mark{ background: linear-gradient(90deg, rgba(37,99,235,0.16), rgba(217,70,239,0.16)); padding:0 3px; border-radius:3px; color:inherit; }
+</style>
+</head>
+<body>
+  <!-- wallpaper -->
+  <div id="bg" class="bg blur" style="background-image:url('https://images.unsplash.com/photo-1503264116251-35a269479413?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&s=0a0e5d9c2a1a2bf8d7d4f84e7b3a3f0f');"></div>
+  <div class="overlay"></div>
+
+  <div class="container" role="main" aria-label="KritE Search">
+
+    <div class="topbar" role="banner">
+      <div class="brand" aria-hidden="false">
+        <div class="logo-wrap">
+          <div id="logoBox" class="logo-box" title="KritE logo (click to upload & embed)">
+            <!-- logo will be inserted here -->
+            <img id="logoImg" class="logo-img" alt="KritE logo" src="" style="display:none;" />
+            <div id="logoPlaceholder" style="font-weight:800;color:white;">K</div>
+          </div>
+          <div>
+            <h1 style="margin:0">KritE</h1>
+            <div class="tag">KritE — The Next-Gen Search</div>
+          </div>
+        </div>
+      </div>
+      <div class="small">/ focus • 1..7 switch tabs • Esc close assistant</div>
+    </div>
+
+    <div class="hero" role="search" aria-label="Search KritE">
+      <h2>KritE</h2>
+      <p>Search the web, shopping, AI tools and more — quick shortcuts below.</p>
+
+      <div class="searchbar" role="search">
+        <input id="query" class="search-input" aria-label="Search" placeholder="Search..." />
+        <button id="searchBtn" class="btn" aria-label="Search">Search</button>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Sections">
+        <div class="tab active" data-tab="web">Web</div>
+        <div class="tab" data-tab="shopping">Shopping</div>
+        <div class="tab" data-tab="ai">AI</div>
+        <div class="tab" data-tab="games">Games</div>
+        <div class="tab" data-tab="work">Work</div>
+        <div class="tab" data-tab="discover">Discover</div>
+        <div class="tab" data-tab="entertainment">Entertainment</div>
+      </div>
+
+      <div class="wall-row" role="region" aria-label="Wallpaper controls">
+        <div class="small">Wallpaper mode:</div>
+        <button id="modeBlur" class="tab">Blur</button>
+        <button id="modeSharp" class="tab">Sharp</button>
+        <button id="modeGradient" class="tab">Gradient</button>
+
+        <div style="width:8px"></div>
+        <input id="file" type="file" accept="image/*" />
+        <button id="uploadBtn" class="tab">Logo › Upload & embed</button>
+
+        <input id="wallUrl" placeholder="Paste wallpaper URL" style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)" />
+        <button id="setWall" class="tab">Set</button>
+        <button id="clearWall" class="tab">Clear</button>
+      </div>
+    </div>
+
+    <div class="results-wrap" aria-live="polite">
+      <div class="results" id="resultsArea" tabindex="0">
+        <div class="card" style="text-align:center"><div class="small">No search yet — type a query and press Enter or Search</div></div>
+      </div>
+
+      <aside class="side" aria-label="Quick tools">
+        <div style="font-weight:700; margin-bottom:8px">Shortcuts</div>
+
+        <div id="shortcutsRow" class="shortcuts">
+          <!-- shortcuts will be injected here per tab -->
+        </div>
+
+        <div style="height:12px"></div>
+        <div style="font-weight:700; margin-bottom:6px">Settings</div>
+        <div class="small" style="margin-bottom:8px">Corpus size</div>
+        <select id="docCount" style="width:100%;padding:8px;border-radius:8px;background:transparent;color:var(--text);border:1px solid rgba(255,255,255,0.04)">
+          <option value="200">200</option>
+          <option value="500">500</option>
+          <option value="1000" selected>1000</option>
+          <option value="2000">2000</option>
+        </select>
+        <div style="height:8px"></div>
+        <button id="rebuild" class="tab" style="width:100%">Rebuild Index</button>
+
+        <div style="height:12px"></div>
+        <div style="font-weight:700">Analytics</div>
+        <div id="analytics" class="small" style="margin-top:8px">Events: 0</div>
+      </aside>
+    </div>
+
+    <footer>© KritE — Built Different</footer>
+  </div>
+
+  <!-- assistant -->
+  <div id="assistantBtn" class="assistant-btn" title="Open KritE Assistant">K</div>
+  <div id="assistantPanel" class="assistant-panel" aria-hidden="true" role="dialog" aria-label="KritE Assistant">
+    <div class="assistant-header">
+      <div style="font-weight:800">KritE Guide</div>
+      <div><button id="closeAssistantBtn" class="tab">Close</button></div>
+    </div>
+    <div id="chat" class="assistant-chat" role="log"></div>
+    <div class="assist-row">
+      <input id="assistantInput" placeholder="Ask something..." style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)" />
+      <button id="assistantSend" class="btn" style="padding:8px 10px">Send</button>
+    </div>
+  </div>
+
+<script>
+/* KritE single-file final: shortcuts + local search + logo embedding via base64 upload
+   Note: Instead of pasting a huge Base64 string into chat, the page will convert your uploaded logo
+   to Base64 on first upload and persist it to localStorage so the logo stays embedded for offline use.
+*/
+
+/* helpers */
+const $ = id => document.getElementById(id);
+function logEvent(type, payload={}) {
+  const arr = JSON.parse(localStorage.getItem('krit_events') || '[]');
+  arr.push({ t:new Date().toISOString(), type, payload });
+  localStorage.setItem('krit_events', JSON.stringify(arr));
+  $('analytics').textContent = `Events: ${arr.length}`;
+}
+
+const BG = $('bg');
+
+/* Wallpaper & logo embedding controls */
+const fileInput = $('file');
+const uploadBtn = $('uploadBtn');
+const logoImg = $('logoImg');
+const logoPlaceholder = $('logoPlaceholder');
+const logoBox = $('logoBox');
+
+uploadBtn.addEventListener('click', ()=> fileInput.click());
+logoBox.addEventListener('click', ()=> fileInput.click());
+
+fileInput.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=> {
+    const dataUrl = r.result;
+    // store base64 in localStorage
+    localStorage.setItem('krit_logo_base64', dataUrl);
+    applyLogoFromStorage();
+    alert('Logo embedded into the page and saved for offline use.');
+    logEvent('logo_embedded',{name:f.name, size:f.size});
+  };
+  r.readAsDataURL(f);
+});
+
+/* apply logo if stored */
+function applyLogoFromStorage(){
+  const b = localStorage.getItem('krit_logo_base64');
+  if(b){
+    logoImg.src = b;
+    logoImg.style.display = 'block';
+    logoPlaceholder.style.display = 'none';
+  } else {
+    logoImg.style.display = 'none';
+    logoPlaceholder.style.display = 'block';
+  }
+}
+
+/* wallpaper controls */
+$('setWall').addEventListener('click', ()=>{
+  const v = $('wallUrl').value.trim();
+  if(!v) return alert('Paste an image URL first');
+  applyWallpaper(v, localStorage.getItem('krite_mode') || 'blur');
+  $('wallUrl').value = '';
+});
+$('clearWall').addEventListener('click', ()=> applyWallpaper('', 'gradient'));
+$('modeBlur').addEventListener('click', ()=> { localStorage.setItem('krite_mode','blur'); if(localStorage.getItem('krite_wall')) BG.style.backgroundImage = `url("${localStorage.getItem('krite_wall')}")`; BG.classList.add('blur'); logEvent('mode','blur'); });
+$('modeSharp').addEventListener('click', ()=> { localStorage.setItem('krite_mode','sharp'); if(localStorage.getItem('krite_wall')) BG.style.backgroundImage = `url("${localStorage.getItem('krite_wall')}")`; BG.classList.remove('blur'); logEvent('mode','sharp'); });
+$('modeGradient').addEventListener('click', ()=> { localStorage.setItem('krite_mode','gradient'); BG.style.background='linear-gradient(180deg,#061021,#081426)'; BG.classList.remove('blur'); logEvent('mode','gradient'); });
+
+function applyWallpaper(url, mode='blur'){
+  if(!url || mode==='gradient'){
+    if(mode==='gradient'){
+      BG.style.background='linear-gradient(180deg,#061021,#081426)';
+      BG.classList.remove('blur');
+    } else {
+      BG.style.backgroundImage = '';
+      BG.classList.remove('blur');
+    }
+    localStorage.setItem('krite_mode', mode);
+    if(!url) localStorage.removeItem('krite_wall');
+    return;
+  }
+  BG.style.backgroundImage = `url("${url}")`;
+  if(mode==='blur') BG.classList.add('blur'); else BG.classList.remove('blur');
+  localStorage.setItem('krite_wall', url);
+  localStorage.setItem('krite_mode', mode);
+  logEvent('wall_set',{mode});
+}
+
+(function loadInitialWallpaperAndLogo(){
+  const url = localStorage.getItem('krite_wall');
+  const mode = localStorage.getItem('krite_mode') || 'blur';
+  if(mode==='gradient'){ BG.style.background='linear-gradient(180deg,#061021,#081426)'; BG.classList.remove('blur'); }
+  else if(url){ BG.style.backgroundImage = `url("${url}")`; if(mode==='blur') BG.classList.add('blur'); else BG.classList.remove('blur'); }
+  applyLogoFromStorage();
+})();
+
+/* Tabs & shortcuts */
+let activeTab = 'web';
+const tabEls = document.querySelectorAll('.tabs .tab');
+const shortcutsRow = $('shortcutsRow');
+const defaultShortcuts = {
+  web: [
+    {name:'Search', url:()=>"https://www.google.com/search?q="}, // redirect function used silently
+    {name:'Docs', url:'https://developer.mozilla.org'},
+    {name:'GH', url:'https://github.com'},
+    {name:'Stack', url:'https://stackoverflow.com'}
+  ],
+  shopping:[
+    {name:'Amazon', url:'https://www.amazon.com'},
+    {name:'Flipkart', url:'https://www.flipkart.com'},
+    {name:'eBay', url:'https://www.ebay.com'},
+    {name:'AliExpress', url:'https://www.aliexpress.com'},
+    {name:'Myntra', url:'https://www.myntra.com'}
+  ],
+  ai:[
+    {name:'Chat', url:'https://chat.openai.com'},
+    {name:'Claude', url:'https://claude.ai'},
+    {name:'Gemini', url:'https://gemini.google.com'},
+    {name:'HuggingFace', url:'https://huggingface.co'}
+  ],
+  games:[
+    {name:'Steam', url:'https://store.steampowered.com'},
+    {name:'Epic', url:'https://www.epicgames.com'},
+    {name:'Roblox', url:'https://www.roblox.com'},
+    {name:'Itch.io', url:'https://itch.io'}
+  ],
+  work:[
+    {name:'Notion', url:'https://www.notion.so'},
+    {name:'Figma', url:'https://www.figma.com'},
+    {name:'Canva', url:'https://www.canva.com'},
+    {name:'Trello', url:'https://trello.com'}
+  ],
+  discover:[
+    {name:'Reddit', url:'https://www.reddit.com'},
+    {name:'Pinterest', url:'https://www.pinterest.com'},
+    {name:'GitHub Trending', url:'https://github.com/trending'},
+    {name:'YouTube', url:'https://www.youtube.com/feed/trending'}
+  ],
+  entertainment:[
+    {name:'Netflix', url:'https://www.netflix.com'},
+    {name:'Spotify', url:'https://open.spotify.com'},
+    {name:'YouTube', url:'https://www.youtube.com'},
+    {name:'Disney+', url:'https://www.disneyplus.com'}
+  ]
+};
+
+tabEls.forEach(t => {
+  t.addEventListener('click', ()=> setActiveTab(t.dataset.tab || t.getAttribute('data-tab') || t.textContent.trim().toLowerCase()));
+});
+
+function setActiveTab(name){
+  activeTab = name;
+  tabEls.forEach(x => x.classList.toggle('active', (x.dataset.tab || x.textContent.trim().toLowerCase()) === name));
+  injectShortcuts(name);
+  $('resultsArea').innerHTML = `<div class="card"><div class="small">Tab: <strong>${name}</strong> — use shortcuts or search.</div></div>`;
+  logEvent('tab_switch',{tab:name});
+}
+
+function injectShortcuts(name){
+  const list = defaultShortcuts[name] || [];
+  shortcutsRow.innerHTML = '';
+  for(const s of list){
+    const b = document.createElement('button');
+    b.className = 'shortcut';
+    b.innerText = s.name;
+    b.title = s.name;
+    b.addEventListener('click', ()=> {
+      if(name==='web' && s.name==='Search'){
+        const q = $('query').value.trim();
+        if(!q) return alert('Type a query to search.');
+        const url = s.url() + encodeURIComponent(q);
+        window.open(url,'_blank'); // opens in new tab, no brand mention in UI
+        logEvent('redirect',{tab:name, site:s.name, query:q});
+        return;
+      }
+      window.open(s.url,'_blank');
+      logEvent('shortcut_click',{tab:name, site:s.name});
+    });
+    shortcutsRow.appendChild(b);
+  }
+}
+
+/* local corpus generator */
+const TOPICS = ["Web Performance","Frontend","Design","Deployment","AI Tools","Productivity","Gaming","Ecommerce","Accessibility","React","Node.js","DevOps","Data","Photography","Music","Movies","Anime","Fitness","Travel","Finance"];
+const SNIPPETS = [
+  "This article explains practical patterns to speed up load time and render performance.",
+  "Learn layout techniques and modern JavaScript patterns for robust UIs.",
+  "Step-by-step deployment instructions for static sites and serverless frameworks.",
+  "A list of useful AI tools and integration tips for product workflows.",
+  "Shopping tips: how to compare prices, spot deals, and choose reliable sellers.",
+  "Compact practical guide to improve your game strategy."
+];
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function makeContent(){ let out=[]; for(let i=0;i<4+Math.floor(Math.random()*6);i++) out.push(rand(SNIPPETS)); return out.join(' '); }
+function generateDocs(n){
+  const docs=[];
+  for(let i=0;i<n;i++){
+    const topic = rand(TOPICS);
+    const title = `${topic} — ${Math.random()<0.4?'Guide':'Tips'} #${Math.floor(Math.random()*9000+100)}`;
+    const url = `https://krit-e.local/${topic.toLowerCase().replace(/[^a-z0-9]+/g,'-')}/${i}`;
+    const tags = topic.toLowerCase().split(' ').slice(0,3).join(',');
+    const content = makeContent();
+    docs.push({id:String(i+1),title,url,tags,content});
+  }
+  return docs;
+}
+
+let DOCS = [];
+function buildCorpus(n){
+  $('resultsArea').innerHTML = `<div class="card"><div class="small">Generating ${n} docs — please wait...</div></div>`;
+  logEvent('corpus_build_start',{n});
+  setTimeout(()=>{
+    DOCS = generateDocs(n);
+    $('resultsArea').innerHTML = `<div class="card"><div class="small">Local corpus built: ${DOCS.length} docs. Use search when not in Web tab.</div></div>`;
+    logEvent('corpus_build_done',{n});
+  }, 60);
+}
+
+/* search & results */
+function simpleSearch(q,dataset){
+  q = q.trim().toLowerCase();
+  if(!q) return [];
+  const arr = (dataset||DOCS).filter(d => (d.title + ' ' + d.content + ' ' + d.tags).toLowerCase().includes(q));
+  return arr.slice(0,60);
+}
+function highlight(text,q){
+  if(!q) return text;
+  const re = new RegExp('('+q.split(/\s+/).map(s=>s.replace(/[.*+?^${}()|[\\\]\\]/g,'\\$&')).join('|')+')','ig');
+  return text.replace(re,'<mark>$1</mark>');
+}
+function renderLocalResults(q,hits){
+  if(!hits || hits.length===0){
+    $('resultsArea').innerHTML = `<div class="card"><div class="small">No local results for "${escapeHtml(q)}". Use shortcuts or try another query.</div></div>`;
+    return;
+  }
+  const html = hits.map(h=> `<div class="card"><div class="title">${highlight(escapeHtml(h.title),q)}</div><div class="url">${escapeHtml(h.url)}</div><div class="snippet">${highlight(escapeHtml(h.content).slice(0,220),q)}</div></div>`).join('');
+  $('resultsArea').innerHTML = html;
+}
+
+$('searchBtn').addEventListener('click', doSearch);
+$('query').addEventListener('keydown', e=> { if(e.key==='Enter') doSearch(); });
+
+function doSearch(){
+  const q = $('query').value.trim();
+  if(!q) return;
+  logEvent('search',{q,tab:activeTab});
+  if(activeTab==='web'){
+    // Silent redirect to search engine in new tab (we don't display any brand names in UI)
+    const url = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+    window.open(url,'_blank');
+    $('resultsArea').innerHTML = `<div class="card"><div class="small">Opened a new tab for the query. Local shortcuts are listed to the right.</div></div>`;
+    return;
+  }
+  // other tabs: search the appropriate dataset
+  let dataset = DOCS;
+  if(activeTab==='shopping') dataset = SHOP;
+  if(activeTab==='ai') dataset = AI_TOOLS;
+  if(activeTab==='games') dataset = GAMES;
+  if(activeTab==='work') dataset = WORK;
+  if(activeTab==='discover') dataset = DISCOVER;
+  if(activeTab==='entertainment') dataset = ENTERTAINMENT;
+
+  const hits = simpleSearch(q,dataset);
+  renderLocalResults(q,hits);
+}
+
+/* assistant */
+$('assistantBtn').addEventListener('click', openAssistant);
+$('openAssistant')?.addEventListener('click', openAssistant);
+$('closeAssistantBtn').addEventListener('click', closeAssistant);
+$('assistantSend').addEventListener('click', ()=> { const t = $('assistantInput').value.trim(); if(!t) return; assistantQuery(t); $('assistantInput').value=''; });
+
+function openAssistant(){ $('assistantPanel').classList.add('open'); $('assistantPanel').setAttribute('aria-hidden','false'); logEvent('assistant_open'); }
+function closeAssistant(){ $('assistantPanel').classList.remove('open'); $('assistantPanel').setAttribute('aria-hidden','true'); logEvent('assistant_close'); }
+function appendChat(who, text){ const c = $('chat'); const el = document.createElement('div'); el.style.marginBottom='8px'; el.innerHTML = `<div style="font-weight:700">${who}</div><div style="color:var(--muted)">${text}</div>`; c.appendChild(el); c.scrollTop = c.scrollHeight; }
+
+function assistantQuery(q){
+  appendChat('You', escapeHtml(q));
+  appendChat('KritE Guide', '<em>Thinking...</em>');
+  setTimeout(()=>{
+    const c = $('chat'); if(c.lastChild) c.removeChild(c.lastChild);
+    let ans = "I can summarize local results or open an external search. Try: 'summarize deploy guide'.";
+    if(/deploy|vercel|netlify/i.test(q)) ans = "Deploy tip: Use modern static hosting and connect your repo for continuous delivery.";
+    else if(/summarize (.+)/i.test(q)){
+      const m = q.match(/summarize (.+)/i);
+      const term = m[1];
+      const hits = simpleSearch(term, DOCS);
+      if(hits.length) ans = `Top match: ${hits[0].title} — ${hits[0].content.slice(0,240)}${hits[0].content.length>240?'...':''}`;
+      else ans = "No local matches found. Try a different query.";
+    } else {
+      const hits = simpleSearch(q, DOCS);
+      if(hits.length) ans = `I found ${hits.length} local matches. Top: ${hits[0].title}. Use the search box for full list.`;
+    }
+    appendChat('KritE Guide', escapeHtml(ans));
+    logEvent('assistant_query',{q});
+  }, 600 + Math.floor(Math.random()*500));
+}
+
+/* small datasets for non-web tabs */
+const SHOP = [
+  {id:'s1', title:'Compact Mechanical Keyboard — K61', url:'https://store.example/keyboard', tags:'keyboard,mechanical', content:'Low-profile compact mechanical keyboard with blue switches and backlight.'},
+  {id:'s2', title:'Minimal Desk Lamp', url:'https://store.example/lamp', tags:'lighting,desk', content:'Adjustable LED lamp with warm light and USB-C charging.'},
+  {id:'s3', title:'Wireless Earbuds Pro', url:'https://store.example/earbuds', tags:'audio,earbuds', content:'Long battery, ANC, and clear call quality.'}
+];
+const AI_TOOLS = [
+  {id:'a1', title:'Image AI Tool', url:'#', tags:'image,ai', content:'AI-assisted image editing and upscaling.'},
+  {id:'a2', title:'SummarizeThis', url:'#', tags:'nlp,summary', content:'One-click summarization demo.'}
+];
+const GAMES = [
+  {id:'g1', title:'2048 — Strategy', url:'#', tags:'2048,game', content:'Keep your highest tile in a corner and merge towards it.'},
+  {id:'g2', title:'Indie Soccer', url:'#', tags:'indie,soccer', content:'Stylized 2D soccer with physics-based controls.'}
+];
+const WORK = [
+  {id:'w1', title:'Pomodoro Workflow', url:'#', tags:'productivity', content:'Use 25-minute focus windows and 5-minute breaks.'},
+  {id:'w2', title:'Resume Checklist', url:'#', tags:'career', content:'Keep it short, tailored, and quant-focused.'}
+];
+const DISCOVER = [
+  {id:'d1', title:'AI art trends', url:'#', tags:'ai,art', content:'New diffusion techniques and inpainting workflows.'},
+  {id:'d2', title:'Minimal UI', url:'#', tags:'design', content:'Less noise, more clarity.'}
+];
+const ENTERTAINMENT = [
+  {id:'e1', title:'Top Albums', url:'#', tags:'music', content:'Noteworthy albums this year.'},
+  {id:'e2', title:'Indie Film Picks', url:'#', tags:'movies', content:'Curated indie cinema picks.'}
+];
+
+/* utilities */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* keyboard shortcuts */
+document.addEventListener('keydown', e=>{
+  if(e.key === '/' && document.activeElement !== $('query')) { e.preventDefault(); $('query').focus(); $('query').select(); }
+  if(e.key === 'Escape') closeAssistant();
+  if('1234567'.includes(e.key)){
+    const map = {'1':'web','2':'shopping','3':'ai','4':'games','5':'work','6':'discover','7':'entertainment'};
+    setActiveTab(map[e.key]);
+  }
+});
+
+/* build & init */
+(function init(){
+  const savedEvents = JSON.parse(localStorage.getItem('krit_events') || '[]');
+  $('analytics').textContent = `Events: ${savedEvents.length}`;
+  const mode = localStorage.getItem('krite_mode') || 'blur';
+  if(mode==='sharp') BG.classList.remove('blur');
+  if(mode==='gradient'){ BG.style.background='linear-gradient(180deg,#061021,#081426)'; BG.classList.remove('blur'); }
+  injectShortcuts('web');
+  buildCorpus(Number($('docCount').value) || 1000);
+  setActiveTab('web');
+  applyLogoFromStorage();
+  logEvent('app_load',{corpus:Number($('docCount').value)});
+})();
+</script>
+</body>
+</html>
